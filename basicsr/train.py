@@ -121,6 +121,8 @@ def create_train_val_dataloader(opt, logger):
             logger.info(
                 f'Number of val images/folders in {dataset_opt["name"]}: '
                 f'{len(val_set)}')
+        elif phase == 'test':
+            pass
         else:
             raise ValueError(f'Dataset phase {phase} is not recognized.')
 

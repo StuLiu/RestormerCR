@@ -28,7 +28,7 @@ def ordered_yaml():
     return Loader, Dumper
 
 
-def parse(opt_path, is_train=True):
+def parse(opt_path, is_train:bool=True):
     """Parse option file.
 
     Args:

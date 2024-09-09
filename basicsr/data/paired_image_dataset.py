@@ -1,3 +1,5 @@
+import os
+
 from torch.utils import data as data
 from torchvision.transforms.functional import normalize
 
@@ -12,6 +14,8 @@ import random
 import numpy as np
 import torch
 import cv2
+import json
+
 
 class Dataset_PairedImage(data.Dataset):
     """Paired image dataset for image restoration.
@@ -130,6 +134,270 @@ class Dataset_PairedImage(data.Dataset):
 
     def __len__(self):
         return len(self.paths)
+
+
+class Dataset_CloudRemoval(Dataset_PairedImage):
+
+    def __init__(self, opt):
+        super().__init__(opt)
+
+    def __getitem__(self, index):
+        if self.file_client is None:
+            self.file_client = FileClient(
+                self.io_backend_opt.pop('type'), **self.io_backend_opt)
+
+        scale = self.opt['scale']
+        index = index % len(self.paths)
+        # Load gt and lq images. Dimension order: HWC; channel order: BGR;
+        # image range: [0, 1], float32.
+
+        gt_path = self.paths[index]['gt_path']
+        if self.opt['phase'] != 'test':
+            img_bytes = self.file_client.get(gt_path, 'gt')
+            try:
+                img_gt = imfrombytes(img_bytes, float32=True)
+            except:
+                raise Exception("gt path {} not working".format(gt_path))
+        else:
+            img_gt = None
+
+        lq_path = self.paths[index]['lq_path']
+        img_bytes = self.file_client.get(lq_path, 'lq')
+        try:
+            img_lq = imfrombytes(img_bytes, float32=True)
+        except:
+            raise Exception("lq path {} not working".format(lq_path))
+
+        # cv2.imshow('', (img_lq * 255).astype(np.uint8))
+        # cv2.waitKey(0)
+
+        sar_vh = self.paths[index]['lq_path'].replace('/opt_cloudy', '/SAR/VH').replace("_p_", "_VH_p_")
+        sar_vh = cv2.imread(sar_vh, flags=cv2.IMREAD_UNCHANGED) / 255.0
+        sar_vv = self.paths[index]['lq_path'].replace('/opt_cloudy', '/SAR/VV').replace("_p_", "_VV_p_")
+        sar_vv = cv2.imread(sar_vv, flags=cv2.IMREAD_UNCHANGED) / 255.0
+        img_lq = np.concatenate([img_lq, sar_vh[:, :, None], sar_vv[:, :, None]], axis=2)
+
+        # augmentation for training
+        if self.opt['phase'] == 'train':
+            gt_size = self.opt['gt_size']
+            # padding
+            img_gt, img_lq = padding(img_gt, img_lq, gt_size)
+
+            # random crop
+            img_gt, img_lq = paired_random_crop(img_gt, img_lq, gt_size, scale, gt_path)
+
+            # flip, rotation augmentations
+            if self.geometric_augs:
+                img_gt, img_lq = random_augmentation(img_gt, img_lq)
+
+        # BGR to RGB, HWC to CHW, numpy to tensor
+        if self.opt['phase'] != 'test':
+            img_gt, img_lq = img2tensor([img_gt, img_lq], bgr2rgb=False, float32=True)
+        else:
+            img_lq = img2tensor(img_lq, bgr2rgb=False, float32=True)
+
+        # normalize
+        if self.mean is not None or self.std is not None:
+            normalize(img_lq, self.mean, self.std, inplace=True)
+            if self.opt['phase'] != 'test':
+                normalize(img_gt, self.mean, self.std, inplace=True)
+
+        if self.opt['phase'] != 'test':
+            return {
+                'lq': img_lq,
+                'gt': img_gt,
+                'lq_path': lq_path,
+                'gt_path': gt_path
+            }
+        else:
+            return {
+                'lq': img_lq,
+                'lq_path': lq_path
+            }
+
+
+class Dataset_CloudRemoval_RCS(Dataset_CloudRemoval):
+    # less ocean, more cloud
+    def __init__(self, opt):
+        super().__init__(opt)
+
+        with open(f'{opt["dataroot_gt"]}/../gtname2isocean_cloudyrate.json', 'r') as f:
+            self.gtname2isocean_cloudyrate = json.load(f)
+
+        self.name2index = {}
+        self.names_isocean_true = []
+        self.names_isocean_false = []
+        index = 0
+        for name, (isocean, cloudyrate) in self.gtname2isocean_cloudyrate.items():
+            self.name2index[name] = index
+            index += 1
+            if isocean:
+                self.names_isocean_true.append(name)
+            else:
+                # # result in bad performance for easy examples
+                length = int(cloudyrate) + 1
+                names_cp = [name] * length
+                self.names_isocean_false.extend(names_cp)
+        print(f'names_isocean_true-len={len(self.names_isocean_true)}, '
+              f'names_isocean_false-len={len(self.names_isocean_false)}')
+
+    def rcs(self):
+        if np.random.rand() < 0.01:
+            # selected from ocean
+            name = random.choice(self.names_isocean_true)
+        else:
+            # selected from land
+            name = random.choice(self.names_isocean_false)
+        index = self.name2index[name]
+        return index
+
+    def __getitem__(self, index):
+        index = self.rcs()
+        return super().__getitem__(index)
+
+
+class Dataset_CloudRemoval_RCSv2(Dataset_CloudRemoval):
+    # less ocean
+    def __init__(self, opt):
+        super().__init__(opt)
+
+        with open(f'{opt["dataroot_gt"]}/../gtname2isocean_cloudyrate.json', 'r') as f:
+            self.gtname2isocean_cloudyrate = json.load(f)
+
+        self.name2index = {}
+        self.names_isocean_true = []
+        self.names_isocean_false = []
+        index = 0
+        for name, (isocean, cloudyrate) in self.gtname2isocean_cloudyrate.items():
+            self.name2index[name] = index
+            index += 1
+            if isocean:
+                self.names_isocean_true.append(name)
+            else:
+                self.names_isocean_false.append(name)
+        print(f'names_isocean_true-len={len(self.names_isocean_true)}, '
+              f'names_isocean_false-len={len(self.names_isocean_false)}')
+
+    def rcs(self):
+        if np.random.rand() < 0.01:
+            # selected from ocean
+            name = random.choice(self.names_isocean_true)
+        else:
+            # selected from land
+            name = random.choice(self.names_isocean_false)
+        index = self.name2index[name]
+        return index
+
+    def __getitem__(self, index):
+        index = self.rcs()
+        return super().__getitem__(index)
+
+
+class Dataset_CloudRemoval_RCSv3(Dataset_CloudRemoval):
+    # more ocean
+    def __init__(self, opt):
+        super().__init__(opt)
+
+        with open(f'{opt["dataroot_gt"]}/../gtname2isocean_cloudyrate.json', 'r') as f:
+            self.gtname2isocean_cloudyrate = json.load(f)
+
+        self.name2index = {}
+        self.names_isocean_true = []
+        self.names_isocean_false = []
+        index = 0
+        for name, (isocean, cloudyrate) in self.gtname2isocean_cloudyrate.items():
+            self.name2index[name] = index
+            index += 1
+            if isocean:
+                self.names_isocean_true.append(name)
+            else:
+                self.names_isocean_false.append(name)
+        print(f'names_isocean_true-len={len(self.names_isocean_true)}, '
+              f'names_isocean_false-len={len(self.names_isocean_false)}')
+
+    def rcs(self):
+        if np.random.rand() < 0.5:
+            # selected from ocean
+            name = random.choice(self.names_isocean_true)
+        else:
+            # selected from land
+            name = random.choice(self.names_isocean_false)
+        index = self.name2index[name]
+        return index
+
+    def __getitem__(self, index):
+        index = self.rcs()
+        return super().__getitem__(index)
+
+
+class Dataset_CloudRemoval_RCSv4(Dataset_CloudRemoval):
+    # more neighbors rate=0.5
+    def __init__(self, opt):
+        super().__init__(opt)
+
+        with open(f'{opt["dataroot_gt"]}/../neighbors.json', 'r') as f:
+            json_obj = json.load(f)
+            neighbors = json_obj['neighbors']
+        names = os.listdir(opt["dataroot_gt"])
+        name2index = {name: index for index, name in enumerate(names)}
+        self.indexs_neighbor = [name2index[name] for name in neighbors]
+
+    def rcs(self, index):
+        if np.random.rand() < 0.5:
+            # selected from neighbor
+            index = random.choice(self.indexs_neighbor)
+        return index
+
+    def __getitem__(self, index):
+        index = self.rcs(index)
+        return super().__getitem__(index)
+
+
+class Dataset_CloudRemoval_RCSv5(Dataset_CloudRemoval):
+    # more neighbors rate = 0.1
+    def __init__(self, opt):
+        super().__init__(opt)
+
+        with open(f'{opt["dataroot_gt"]}/../neighbors.json', 'r') as f:
+            json_obj = json.load(f)
+            neighbors = json_obj['neighbors']
+        names = os.listdir(opt["dataroot_gt"])
+        name2index = {name: index for index, name in enumerate(names)}
+        self.indexs_neighbor = [name2index[name] for name in neighbors]
+
+    def rcs(self, index):
+        if np.random.rand() < 0.1:
+            # selected from neighbor
+            index = random.choice(self.indexs_neighbor)
+        return index
+
+    def __getitem__(self, index):
+        index = self.rcs(index)
+        return super().__getitem__(index)
+
+
+class Dataset_CloudRemoval_RCSv6(Dataset_CloudRemoval):
+    # more neighbors rate = 0.9
+    def __init__(self, opt):
+        super().__init__(opt)
+
+        with open(f'{opt["dataroot_gt"]}/../neighbors.json', 'r') as f:
+            json_obj = json.load(f)
+            neighbors = json_obj['neighbors']
+        names = os.listdir(opt["dataroot_gt"])
+        name2index = {name: index for index, name in enumerate(names)}
+        self.indexs_neighbor = [name2index[name] for name in neighbors]
+
+    def rcs(self, index):
+        if np.random.rand() < 0.9:
+            # selected from neighbor
+            index = random.choice(self.indexs_neighbor)
+        return index
+
+    def __getitem__(self, index):
+        index = self.rcs(index)
+        return super().__getitem__(index)
+
 
 class Dataset_GaussianDenoising(data.Dataset):
     """Paired image dataset for image restoration.

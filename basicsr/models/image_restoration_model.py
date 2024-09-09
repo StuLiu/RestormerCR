@@ -64,7 +64,7 @@ class ImageCleanModel(BaseModel):
 
         self.net_g = define_network(deepcopy(opt['network_g']))
         self.net_g = self.model_to_device(self.net_g)
-        self.print_network(self.net_g)
+        # self.print_network(self.net_g)
 
         # load pretrained models
         load_path = self.opt['path'].get('pretrain_network_g', None)
@@ -203,6 +203,32 @@ class ImageCleanModel(BaseModel):
                 pred = pred[-1]
             self.output = pred
             self.net_g.train()
+
+    def nondist_testing(self, dataloader, rgb2bgr, save_dir, save_lq=True):
+        test = self.nonpad_test
+        cnt = 0
+        for idx, val_data in enumerate(dataloader):
+            img_name = osp.splitext(osp.basename(val_data['lq_path'][0]))[0]
+
+            self.feed_data(val_data)
+            test()
+
+            visuals = self.get_current_visuals()
+            out_img = tensor2img([visuals['result']], rgb2bgr=rgb2bgr)
+
+            save_img_path = osp.join(save_dir, f'{img_name}.png')
+            print(f'idx={idx}, saving output to {save_img_path}')
+
+            imwrite(out_img, str(save_img_path))
+
+            if save_lq:
+                lq_img = tensor2img([visuals['lq'][:,:3,:,:]], rgb2bgr=rgb2bgr)
+                save_img_path = osp.join(save_dir, f'{img_name}_lq.png')
+                imwrite(lq_img, str(save_img_path))
+            cnt += 1
+        current_metric = 0.
+        return current_metric
+
 
     def dist_validation(self, dataloader, current_iter, tb_logger, save_img, rgb2bgr, use_image):
         if os.environ['LOCAL_RANK'] == '0':
