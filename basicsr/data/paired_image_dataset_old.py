@@ -138,26 +138,8 @@ class Dataset_PairedImage(data.Dataset):
 
 class Dataset_CloudRemoval(Dataset_PairedImage):
 
-    def __init__(self, opt, debug=False):
+    def __init__(self, opt):
         super().__init__(opt)
-        self.debug = debug
-
-    def show_img(self, img_gt, img_lq):
-        cloudy = img_lq[:, :, :3]
-        sarvh = img_lq[:, :, 3]
-        sarvv = img_lq[:, :, 4]
-        sarvh2 = np.stack([sarvh] * 3, axis=2)
-        sarvv2 = np.stack([sarvv] * 3, axis=2)
-        if img_gt is not None:
-            img_all = np.concatenate([cloudy, sarvh2, sarvv2, img_gt], axis=1)
-        else:
-            img_all = np.concatenate([cloudy, sarvh2, sarvv2], axis=1)
-        cv2.imshow('img_all', img_all)
-        if ord('q') == cv2.waitKey(0):
-            exit(0)
-
-    def random_strong_augs(self, img_gt, img_lq, p=0.5):
-        return img_gt, img_lq
 
     def __getitem__(self, index):
         if self.file_client is None:
@@ -207,13 +189,6 @@ class Dataset_CloudRemoval(Dataset_PairedImage):
             # flip, rotation augmentations
             if self.geometric_augs:
                 img_gt, img_lq = random_augmentation(img_gt, img_lq)
-
-            # strong augmentations
-            img_gt, img_lq = self.random_strong_augs(img_gt, img_lq)
-
-        # show img_lg
-        if self.debug:
-            self.show_img(img_gt, img_lq)
 
         # BGR to RGB, HWC to CHW, numpy to tensor
         if self.opt['phase'] != 'test':
@@ -356,54 +331,72 @@ class Dataset_CloudRemoval_RCSv3(Dataset_CloudRemoval):
 
 
 class Dataset_CloudRemoval_RCSv4(Dataset_CloudRemoval):
-    # random night
-    def __init__(self, opt, debug=False):
-        super().__init__(opt, debug)
+    # more neighbors rate=0.5
+    def __init__(self, opt):
+        super().__init__(opt)
 
-    def random_strong_augs(self, img_gt, img_lq, p=0.5):
-        # img_lq = np.concatenate([img_lq, sar_vh[:, :, None], sar_vv[:, :, None]], axis=2)
-        if np.random.rand() < p:
-            img_vis = img_lq[:, :, :3].copy()
-            dark_rate = random.random() / 2
-            img_lq[:, :, :3] = img_vis * dark_rate
-        return img_gt, img_lq
+        with open(f'{opt["dataroot_gt"]}/../neighbors.json', 'r') as f:
+            json_obj = json.load(f)
+            neighbors = json_obj['neighbors']
+        names = os.listdir(opt["dataroot_gt"])
+        name2index = {name: index for index, name in enumerate(names)}
+        self.indexs_neighbor = [name2index[name] for name in neighbors]
+
+    def rcs(self, index):
+        if np.random.rand() < 0.5:
+            # selected from neighbor
+            index = random.choice(self.indexs_neighbor)
+        return index
+
+    def __getitem__(self, index):
+        index = self.rcs(index)
+        return super().__getitem__(index)
 
 
 class Dataset_CloudRemoval_RCSv5(Dataset_CloudRemoval):
-    # random miss-SAR
-    def __init__(self, opt, debug=False):
-        super().__init__(opt, debug)
+    # more neighbors rate = 0.1
+    def __init__(self, opt):
+        super().__init__(opt)
 
-    @staticmethod
-    def random_mask(img):
-        img = img.copy()
-        img_h, img_w = img.shape[:2]
-        if np.random.rand() < 0.5:
-            crop_height = random.randint(1, img_h)  # 裁剪高度
-            if np.random.rand() < 0.5:
-                img[:crop_height, :, :] = 0
-            else:
-                img[crop_height:, :, :] = 0
-        else:
-            crop_width = random.randint(1, img_w)  # 裁剪高度
-            if np.random.rand() < 0.5:
-                img[:crop_width, :, :] = 0
-            else:
-                img[crop_width:, :, :] = 0
-        return img
+        with open(f'{opt["dataroot_gt"]}/../neighbors.json', 'r') as f:
+            json_obj = json.load(f)
+            neighbors = json_obj['neighbors']
+        names = os.listdir(opt["dataroot_gt"])
+        name2index = {name: index for index, name in enumerate(names)}
+        self.indexs_neighbor = [name2index[name] for name in neighbors]
 
-    def random_strong_augs(self, img_gt, img_lq, p=0.05):
-        # img_lq = np.concatenate([img_lq, sar_vh[:, :, None], sar_vv[:, :, None]], axis=2)
-        if np.random.rand() < p:
-            img_sar = img_lq[:, :, 3:].copy()
-            if np.random.rand() < 0.5:
-                # part miss
-                img_sar = self.random_mask(img_sar)
-            else:
-                # miss all
-                img_sar = np.zeros_like(img_sar)
-            img_lq[:, :, 3:] = img_sar
-        return img_gt, img_lq
+    def rcs(self, index):
+        if np.random.rand() < 0.1:
+            # selected from neighbor
+            index = random.choice(self.indexs_neighbor)
+        return index
+
+    def __getitem__(self, index):
+        index = self.rcs(index)
+        return super().__getitem__(index)
+
+
+class Dataset_CloudRemoval_RCSv6(Dataset_CloudRemoval):
+    # more neighbors rate = 0.9
+    def __init__(self, opt):
+        super().__init__(opt)
+
+        with open(f'{opt["dataroot_gt"]}/../neighbors.json', 'r') as f:
+            json_obj = json.load(f)
+            neighbors = json_obj['neighbors']
+        names = os.listdir(opt["dataroot_gt"])
+        name2index = {name: index for index, name in enumerate(names)}
+        self.indexs_neighbor = [name2index[name] for name in neighbors]
+
+    def rcs(self, index):
+        if np.random.rand() < 0.9:
+            # selected from neighbor
+            index = random.choice(self.indexs_neighbor)
+        return index
+
+    def __getitem__(self, index):
+        index = self.rcs(index)
+        return super().__getitem__(index)
 
 
 class Dataset_GaussianDenoising(data.Dataset):

@@ -57,7 +57,7 @@ cd Restormer
 ./train.sh Denoising/Options/GaussianColorDenoising_RestormerSigma50.yml
 ```
 
-**Note:** The above training scripts use 8 GPUs by default. To use any other number of GPUs, modify [Restormer/train.sh](../train.sh) and the yaml file corresponding to each task (e.g., [Denoising/Options/GaussianGrayDenoising_Restormer.yml](Options/GaussianGrayDenoising_Restormer.yml))
+**Note:** The above training scripts use 8 GPUs by default. To use any other number of GPUs, modify [Restormer/train.sh](../train_old.sh) and the yaml file corresponding to each task (e.g., [Denoising/Options/GaussianGrayDenoising_Restormer.yml](Options/GaussianGrayDenoising_Restormer.yml))
 
 ## Evaluation
 
@@ -138,7 +138,7 @@ cd Restormer
 ./train.sh Denoising/Options/RealDenoising_Restormer.yml
 ```
 
-**Note:** This training script uses 8 GPUs by default. To use any other number of GPUs, modify [Restormer/train.sh](../train.sh) and [Denoising/Options/RealDenoising_Restormer.yml](Options/RealDenoising_Restormer.yml)
+**Note:** This training script uses 8 GPUs by default. To use any other number of GPUs, modify [Restormer/train.sh](../train_old.sh) and [Denoising/Options/RealDenoising_Restormer.yml](Options/RealDenoising_Restormer.yml)
 
 ## Evaluation
 

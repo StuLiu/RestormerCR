@@ -16,7 +16,7 @@ cd Restormer
 ./train.sh Motion_Deblurring/Options/Deblurring_Restormer.yml
 ```
 
-**Note:** The above training script uses 8 GPUs by default. To use any other number of GPUs, modify [Restormer/train.sh](../train.sh) and [Motion_Deblurring/Options/Deblurring_Restormer.yml](Options/Deblurring_Restormer.yml)
+**Note:** The above training script uses 8 GPUs by default. To use any other number of GPUs, modify [Restormer/train.sh](../train_old.sh) and [Motion_Deblurring/Options/Deblurring_Restormer.yml](Options/Deblurring_Restormer.yml)
 
 ## Evaluation
 

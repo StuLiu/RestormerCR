@@ -12,7 +12,7 @@ cd Restormer
 ./train.sh Deraining/Options/Deraining_Restormer.yml
 ```
 
-**Note:** The above training script uses 8 GPUs by default. To use any other number of GPUs, modify [Restormer/train.sh](../train.sh) and [Deraining/Options/Deraining_Restormer.yml](Options/Deraining_Restormer.yml)
+**Note:** The above training script uses 8 GPUs by default. To use any other number of GPUs, modify [Restormer/train.sh](../train_old.sh) and [Deraining/Options/Deraining_Restormer.yml](Options/Deraining_Restormer.yml)
 
 ## Evaluation
 

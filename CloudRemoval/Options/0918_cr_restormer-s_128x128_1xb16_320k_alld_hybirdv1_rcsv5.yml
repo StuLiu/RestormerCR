@@ -1,15 +1,15 @@
 # general settings
-name: 0902_cr_restormer-l_128x128_8xb2_320k_alld_hybirdv1
+name: 0918_cr_restormer-s_128x128_1xb16_320k_alld_hybirdv1_rcsv5
 model_type: ImageCleanModel
 scale: 1
-num_gpu: 8  # set num_gpu: 0 for cpu mode
+num_gpu: 1  # set num_gpu: 0 for cpu mode
 manual_seed: 100
 
 # dataset and data loader settings
 datasets:
   train:
     name: TrainSet
-    type: Dataset_CloudRemoval
+    type: Dataset_CloudRemoval_RCSv5
     dataroot_gt: /home/liuwang/liuwang_data/documents/datasets/restoration/cloudremove/train/opt_clear
     dataroot_lq: /home/liuwang/liuwang_data/documents/datasets/restoration/cloudremove/train/opt_cloudy
     geometric_augs: true
@@ -20,8 +20,8 @@ datasets:
 
     # data loader
     use_shuffle: true
-    num_worker_per_gpu: 2
-    batch_size_per_gpu: 2
+    num_worker_per_gpu: 4
+    batch_size_per_gpu: 16
 
 #    ### -------------Progressive training--------------------------
 #    mini_batch_sizes: [8,5,4,2,1,1]             # Batch size per gpu
@@ -31,7 +31,7 @@ datasets:
 #    ### ------------------------------------------------------------
 
     ## ------- Training on single fixed-patch size 128x128---------
-    mini_batch_sizes: [2]
+    mini_batch_sizes: [16]
     iters: [320000]
     gt_size: 128
     gt_sizes: [128]
@@ -55,35 +55,20 @@ datasets:
     io_backend:
       type: disk
 
-# network structures: restormer-l
+# network structures: restormer-s
 network_g:
   type: Restormer
   inp_channels: 5
   out_channels: 3
-  dim: 64
-  num_blocks: [6, 8, 16, 8]
-  num_refinement_blocks: 6
-  heads: [2, 4, 8, 16]
+  dim: 32
+  num_blocks: [2,2,2,8]
+  num_refinement_blocks: 2
+  heads: [1,2,2,4]
   ffn_expansion_factor: 2.66
   bias: False
   LayerNorm_type: WithBias
   dual_pixel_task: False
-
-## network structures: restormer-s
 #network_g:
-#  type: Restormer
-#  inp_channels: 5
-#  out_channels: 3
-#  dim: 32
-#  num_blocks: [2,2,2,8]
-#  num_refinement_blocks: 2
-#  heads: [1,2,2,4]
-#  ffn_expansion_factor: 2.66
-#  bias: False
-#  LayerNorm_type: WithBias
-#  dual_pixel_task: False
-
-# # network structures: restormer-b
 #  type: Restormer
 #  inp_channels: 3
 #  out_channels: 3
@@ -115,8 +100,8 @@ train:
   scheduler:
     type: CosineAnnealingRestartCyclicLR
     periods: [90000, 230000]
-    restart_weights: [1, 1]
-    eta_mins: [0.0003, 0.000001]
+    restart_weights: [1,1]
+    eta_mins: [0.0003,0.000001]
   
   mixing_augs:
     mixup: false
@@ -138,10 +123,10 @@ train:
 # validation settings
 val:
   window_size: 8
-  val_freq: !!float 3.2e4
+  val_freq: !!float 6.4e4
   save_img: false
-  rgb2bgr: true
-  use_image: true
+  rgb2bgr: false
+  use_image: false
   max_minibatch: 8
 
   metrics:
@@ -164,7 +149,7 @@ test:
 # logging settings
 logger:
   print_freq: 100
-  save_checkpoint_freq: !!float 3.2e4
+  save_checkpoint_freq: !!float 6.4e4
   use_tb_logger: true
   wandb:
     project: ~
