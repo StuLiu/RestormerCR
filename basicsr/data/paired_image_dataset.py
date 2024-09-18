@@ -9,6 +9,7 @@ from basicsr.data.data_util import (paired_paths_from_folder,
                                     paired_paths_from_meta_info_file)
 from basicsr.data.transforms import augment, paired_random_crop, paired_random_crop_DP, random_augmentation
 from basicsr.utils import FileClient, imfrombytes, img2tensor, padding, padding_DP, imfrombytesDP
+from basicsr.utils.perlin_cloud import cloud_gen_perlin
 
 import random
 import numpy as np
@@ -378,21 +379,21 @@ class Dataset_CloudRemoval_RCSv5(Dataset_CloudRemoval):
     def random_mask(img):
         img = img.copy()
         img_h, img_w = img.shape[:2]
-        if np.random.rand() < 0.5:
-            crop_height = random.randint(1, img_h)  # 裁剪高度
+        if np.random.rand() < 0.5:  # 裁剪高度
+            crop_height = random.randint(1, img_h // 4)
             if np.random.rand() < 0.5:
                 img[:crop_height, :, :] = 0
             else:
-                img[crop_height:, :, :] = 0
+                img[-crop_height:, :, :] = 0
         else:
-            crop_width = random.randint(1, img_w)  # 裁剪高度
+            crop_width = random.randint(1, img_w // 4)
             if np.random.rand() < 0.5:
-                img[:crop_width, :, :] = 0
+                img[:, :crop_width, :] = 0
             else:
-                img[crop_width:, :, :] = 0
+                img[:, -crop_width:, :] = 0
         return img
 
-    def random_strong_augs(self, img_gt, img_lq, p=0.05):
+    def random_strong_augs(self, img_gt, img_lq, p=0.02):
         # img_lq = np.concatenate([img_lq, sar_vh[:, :, None], sar_vv[:, :, None]], axis=2)
         if np.random.rand() < p:
             img_sar = img_lq[:, :, 3:].copy()
@@ -403,6 +404,63 @@ class Dataset_CloudRemoval_RCSv5(Dataset_CloudRemoval):
                 # miss all
                 img_sar = np.zeros_like(img_sar)
             img_lq[:, :, 3:] = img_sar
+        return img_gt, img_lq
+
+
+class Dataset_CloudRemoval_RCSv6(Dataset_CloudRemoval_RCSv4):
+    # random night + more cloudy
+    def __init__(self, opt, debug=False):
+        super().__init__(opt, debug)
+
+        with open(f'{opt["dataroot_gt"]}/../gtname2isocean_cloudyrate.json', 'r') as f:
+            self.gtname2isocean_cloudyrate = json.load(f)
+
+        self.indexes_more_cloudy = []
+        index = 0
+        for name, (_, cloudyrate) in self.gtname2isocean_cloudyrate.items():
+            # # result in bad performance for easy examples
+            length = int(cloudyrate / 10) + 1
+            indexes_cp = [index] * length
+            self.indexes_more_cloudy.extend(indexes_cp)
+            index += 1
+        print(f'indexes_more_cloudy-len={len(self.indexes_more_cloudy)}')
+
+    def rcs(self):
+        index = random.choice(self.indexes_more_cloudy)
+        return index
+
+    def __getitem__(self, index):
+        if self.split == 'train':
+            index = self.rcs()
+        return super().__getitem__(index)
+
+
+class Dataset_CloudRemoval_RCSv7(Dataset_CloudRemoval):
+    # random night + berlin-cloud
+    def __init__(self, opt, debug=False):
+        super().__init__(opt, debug)
+
+    @staticmethod
+    def add_berlin_cloud(img_bgr, p=0.8):
+        if random.random() < p:
+            if np.sum(img_bgr > 160) < 1600:
+                img_clody = cloud_gen_perlin(img_bgr * 255)
+                return img_clody / 255
+            else:
+                return img_bgr
+        else:
+            return img_bgr
+
+    def random_strong_augs(self, img_gt, img_lq, p=0.5):
+        # img_lq = np.concatenate([img_lq, sar_vh[:, :, None], sar_vv[:, :, None]], axis=2)
+        if np.random.rand() < p:
+            img_vis = img_lq[:, :, :3].copy()
+            dark_rate = random.random() / 2
+            img_lq[:, :, :3] = img_vis * dark_rate
+
+        if np.random.rand() < 0.8:
+            img_lq[:, :, :3] = self.add_berlin_cloud(img_lq[:, :, :3])
+
         return img_gt, img_lq
 
 
