@@ -362,6 +362,7 @@ class Dataset_CloudRemoval_RCSv4(Dataset_CloudRemoval):
         super().__init__(opt, debug)
 
     def random_strong_augs(self, img_gt, img_lq, p=0.5):
+        # print('Dataset_CloudRemoval_RCSv4 -> random_strong_augs')
         # img_lq = np.concatenate([img_lq, sar_vh[:, :, None], sar_vv[:, :, None]], axis=2)
         if np.random.rand() < p:
             img_vis = img_lq[:, :, :3].copy()
@@ -408,7 +409,7 @@ class Dataset_CloudRemoval_RCSv5(Dataset_CloudRemoval):
 
 
 class Dataset_CloudRemoval_RCSv6(Dataset_CloudRemoval_RCSv4):
-    # random night + more cloudy
+    # random night + more cloudy (cloudyrate/10)
     def __init__(self, opt, debug=False):
         super().__init__(opt, debug)
 
@@ -462,6 +463,32 @@ class Dataset_CloudRemoval_RCSv7(Dataset_CloudRemoval):
             img_lq[:, :, :3] = self.add_berlin_cloud(img_lq[:, :, :3])
 
         return img_gt, img_lq
+
+
+class Dataset_CloudRemoval_RCSv8(Dataset_CloudRemoval_RCSv4):
+    # random night + more cloudy(cloudyrate/100)
+    def __init__(self, opt, debug=False):
+        super().__init__(opt, debug)
+
+        with open(f'{opt["dataroot_gt"]}/../gtname2isocean_cloudyrate.json', 'r') as f:
+            self.gtname2isocean_cloudyrate = json.load(f)
+
+        self.indexes_more_cloudy = []
+        index = 0
+        for name, (_, cloudyrate) in self.gtname2isocean_cloudyrate.items():
+            length = int(cloudyrate / 10) + 10
+            indexes_cp = [index] * length
+            self.indexes_more_cloudy.extend(indexes_cp)
+            index += 1
+        print(f'indexes_more_cloudy-len={len(self.indexes_more_cloudy)}')
+
+    def rcs(self):
+        index = random.choice(self.indexes_more_cloudy)
+        return index
+
+    def __getitem__(self, index):
+        index = self.rcs()
+        return super().__getitem__(index)
 
 
 class Dataset_GaussianDenoising(data.Dataset):
