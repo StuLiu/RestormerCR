@@ -491,6 +491,33 @@ class Dataset_CloudRemoval_RCSv8(Dataset_CloudRemoval_RCSv4):
         return super().__getitem__(index)
 
 
+class Dataset_CloudRemoval_RCSv9(Dataset_CloudRemoval_RCSv4):
+    # random night + less cloudy(cloudyrate/100)
+    def __init__(self, opt, debug=False):
+        super().__init__(opt, debug)
+
+        with open(f'{opt["dataroot_gt"]}/../gtname2isocean_cloudyrate.json', 'r') as f:
+            self.gtname2isocean_cloudyrate = json.load(f)
+
+        self.indexes_more_cloudy = []
+        index = 0
+        for name, (_, cloudyrate) in self.gtname2isocean_cloudyrate.items():
+            length = 11 - int(cloudyrate / 10)
+            indexes_cp = [index] * length
+            self.indexes_more_cloudy.extend(indexes_cp)
+            index += 1
+        print(f'indexes_more_cloudy-len={len(self.indexes_more_cloudy)}')
+
+    def rcs(self):
+        index = random.choice(self.indexes_more_cloudy)
+        return index
+
+    def __getitem__(self, index):
+        index = self.rcs()
+        return super().__getitem__(index)
+
+
+
 class Dataset_GaussianDenoising(data.Dataset):
     """Paired image dataset for image restoration.
 

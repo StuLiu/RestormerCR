@@ -12,9 +12,9 @@
 ##  CloudRemoval/train.py \
 ##  -opt CloudRemoval/Options/0902_cr_restormer-l_128x128_8xb2_320k_alld_hybirdv1.yml \
 ##  --launcher pytorch
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=0
 
-name="0920_cr_restormer-s_128x128_1xb16_320k_alld_hybirdv1_rcsv8"
+name="0928_cr_restormer-s_128x128_1xb16_320k_alld_hybirdv1_rcsv4"
 
 # training
 python CloudRemoval/train.py \
