@@ -1,8 +1,8 @@
 
 
-#python CloudRemoval/Datasets/split_trainval_alltrain.py
-#
-#python CloudRemoval/Datasets/copy_var.py
+python CloudRemoval/Datasets/split_trainval_alltrain_docker.py
+
+python CloudRemoval/Datasets/copy_var_docker.py
 #
 ## single GPU training restormer-s, 71.69, for 11h
 #python CloudRemoval/train.py -opt CloudRemoval/Options/0908_cr_restormer-s_128x128_1xb16_160k_alld_hybirdv1_prog2.yml
