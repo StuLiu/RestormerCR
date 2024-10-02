@@ -14,7 +14,7 @@ python CloudRemoval/Datasets/copy_var_docker.py
 ##  --launcher pytorch
 export CUDA_VISIBLE_DEVICES=0
 
-name="1003_cr_restormer-s_128x128_1xb32_640k_alld_hybirdv1_docker"
+name="1003_cr_restormer-s_128x128_1xb32_640k_alld_hybirdv1_nw8_docker"
 
 # training
 python CloudRemoval/train.py \

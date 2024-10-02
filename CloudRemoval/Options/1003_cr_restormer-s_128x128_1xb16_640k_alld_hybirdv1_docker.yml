@@ -9,7 +9,7 @@ manual_seed: 100
 datasets:
   train:
     name: TrainSet
-    type: Dataset_CloudRemoval_RCSv4
+    type: Dataset_CloudRemoval
     dataroot_gt: /data/train/opt_clear
     dataroot_lq: /data/train/opt_cloudy
     geometric_augs: true
