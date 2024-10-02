@@ -28,3 +28,6 @@ python CloudRemoval/test.py -opt CloudRemoval/Options/${name}.yml \
 cd ./submits/${name}
 
 zip -r /output/results.zip results
+
+cd ../..
+rm -rf submits

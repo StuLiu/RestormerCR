@@ -32,7 +32,7 @@ datasets:
 
     ## ------- Training on single fixed-patch size 128x128---------
     mini_batch_sizes: [16]
-    iters: [1000]
+    iters: [100]
     gt_size: 128
     gt_sizes: [128]
     ## ------------------------------------------------------------
@@ -90,7 +90,7 @@ path:
 
 # training settings
 train:
-  total_iter: 1000
+  total_iter: 100
   warmup_iter: -1 # no warm up
   use_grad_clip: true
 
@@ -99,7 +99,7 @@ train:
   # 2nd cycle: cosine annealing (3e-4 to 1e-6) for 208k iters.
   scheduler:
     type: CosineAnnealingRestartCyclicLR
-    periods: [350, 800]
+    periods: [40, 60]
     restart_weights: [1,1]
     eta_mins: [0.0003,0.000001]
   
@@ -123,7 +123,7 @@ train:
 # validation settings
 val:
   window_size: 8
-  val_freq: !!float 5e2
+  val_freq: !!float 5e1
   save_img: false
   rgb2bgr: false
   use_image: false
@@ -148,8 +148,8 @@ test:
 
 # logging settings
 logger:
-  print_freq: 100
-  save_checkpoint_freq: !!float 5e2
+  print_freq: 50
+  save_checkpoint_freq: !!float 5e1
   use_tb_logger: true
   wandb:
     project: ~
