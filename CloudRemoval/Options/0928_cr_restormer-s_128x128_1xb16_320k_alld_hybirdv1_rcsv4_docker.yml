@@ -43,8 +43,8 @@ datasets:
   val:
     name: ValSet
     type: Dataset_CloudRemoval
-    dataroot_gt: /data/val/opt_clear
-    dataroot_lq: /data/val/opt_cloudy
+    dataroot_gt: /output/val/opt_clear
+    dataroot_lq: /output/val/opt_cloudy
     io_backend:
       type: disk
   test:
