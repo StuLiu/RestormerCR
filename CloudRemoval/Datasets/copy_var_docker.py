@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 
 train_root = '/data/train'
-val_root = '/data/val'
+val_root = '/output/val'
 
 train_root_gt = f'{train_root}/opt_clear'
 train_root_cloudy = f'{train_root}/opt_cloudy'
@@ -31,7 +31,7 @@ os.makedirs(val_root_cloudy, exist_ok=True)
 os.makedirs(val_root_sarvh, exist_ok=True)
 os.makedirs(val_root_sarvv, exist_ok=True)
 
-with open(f'{train_root}/val_filenames_alltrain.txt', 'r') as f:
+with open(f'{val_root}/val_filenames_alltrain.txt', 'r') as f:
     lines = f.readlines()
     for line in tqdm(lines):
         file_name = line.strip()

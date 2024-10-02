@@ -6,6 +6,7 @@
 @Date    : 2024/8/1 下午6:51
 @e-mail  : 1183862787@qq.com
 """
+import os
 import os.path
 
 from glob import glob
@@ -17,14 +18,16 @@ from tqdm import tqdm
 # last 0% are val
 percent = 0.01
 train_root = '/data/train'
+val_root = '/output/val'
+os.makedirs(val_root, exist_ok=True)
 
 imgs_gt = glob(f'{train_root}/opt_clear/*.png')
 imgs_gt.sort()
 print('train+val len=', len(imgs_gt))
 val_size = int(len(imgs_gt) * percent)
 
-f_train = open(f'{train_root}/train_filenames_alltrain.txt', 'w', encoding='utf-8')
-f_val = open(f'{train_root}/val_filenames_alltrain.txt', 'w', encoding='utf-8')
+f_train = open(f'{val_root}/train_filenames_alltrain.txt', 'w', encoding='utf-8')
+f_val = open(f'{val_root}/val_filenames_alltrain.txt', 'w', encoding='utf-8')
 
 i = 0
 for img_path in tqdm(imgs_gt):
