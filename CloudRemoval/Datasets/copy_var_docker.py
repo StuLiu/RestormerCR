@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 
 train_root = '/data/train'
-val_root = '/output/val'
+val_root = '/work/val'
 
 train_root_gt = f'{train_root}/opt_clear'
 train_root_cloudy = f'{train_root}/opt_cloudy'

@@ -18,7 +18,7 @@ from tqdm import tqdm
 # last 0% are val
 percent = 0.01
 train_root = '/data/train'
-val_root = '/output/val'
+val_root = '/work/val'
 os.makedirs(val_root, exist_ok=True)
 
 imgs_gt = glob(f'{train_root}/opt_clear/*.png')
