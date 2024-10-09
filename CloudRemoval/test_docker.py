@@ -8,7 +8,7 @@
 """
 import logging
 import os.path
-
+import time
 import torch
 import argparse
 from os import path as osp
@@ -115,4 +115,6 @@ def main():
 
 
 if __name__ == '__main__':
+    time_from = time.time()
     main()
+    print(f'using {time.time() - time_from}s.')
