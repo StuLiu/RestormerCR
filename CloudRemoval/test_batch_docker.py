@@ -23,6 +23,7 @@ from basicsr.utils import (MessageLogger, check_resume, get_env_info,
 
 from basicsr.utils.dist_util import get_dist_info, init_dist
 from basicsr.utils.options import dict2str, parse
+from torch.utils.data import DataLoader
 import time
 
 
@@ -89,13 +90,14 @@ def main():
     for phase, dataset_opt in sorted(opt['datasets'].items()):
         if phase == args.split:
             test_set = create_dataset(dataset_opt)
-            test_loader = create_dataloader(
-                test_set,
-                dataset_opt,
-                num_gpu=opt['num_gpu'],
-                dist=opt['dist'],
-                sampler=None,
-                seed=opt['manual_seed'])
+            test_loader = DataLoader(test_set, batch_size=16, num_workers=4, shuffle=False, drop_last=False)
+            # test_loader = create_dataloader(
+            #     test_set,
+            #     dataset_opt,
+            #     num_gpu=opt['num_gpu'],
+            #     dist=opt['dist'],
+            #     sampler=None,
+            #     seed=opt['manual_seed'])
             logger.info(
                 f"Number of test images in {dataset_opt['name']}: {len(test_set)}")
 
@@ -112,8 +114,8 @@ def main():
     rgb2bgr = opt['test'].get('rgb2bgr', False)
     # wheather use uint8 image to compute metrics
     save_dir = os.path.basename(args.opt).split('.')[0]
-    save_dir = f'submits/{save_dir}/results'
-    model.nondist_testing(test_loader, rgb2bgr=rgb2bgr, save_dir=save_dir, save_lq=False)
+    save_dir = f'/work/submits/{save_dir}/results'
+    model.nondist_testing_batch(test_loader, rgb2bgr=rgb2bgr, save_dir=save_dir, save_lq=False)
 
 
 if __name__ == '__main__':

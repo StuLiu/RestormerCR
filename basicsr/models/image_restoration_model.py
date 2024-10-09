@@ -229,6 +229,57 @@ class ImageCleanModel(BaseModel):
         current_metric = 0.
         return current_metric
 
+    def nondist_testing_batch(self, dataloader, rgb2bgr, save_dir, save_lq=True):
+
+        for idx, val_data in enumerate(dataloader):
+
+            self.feed_data(val_data)
+            self.nonpad_test()
+
+            out_imgs = torch.clip(self.output * 255.0, min=0, max=255.0).permute(0, 2, 3, 1).cpu().numpy()
+            # out_imgs = tensor2img(visuals['result'], rgb2bgr=rgb2bgr)
+
+            bs = len(out_imgs)
+
+            for jdx in range(bs):
+
+                img_name = osp.splitext(osp.basename(val_data['lq_path'][jdx]))[0]
+                save_img_path = osp.join(save_dir, f'{img_name}.png')
+
+                print(f'idx={idx}-{jdx}, saving output to {save_img_path}')
+
+                imwrite(out_imgs[jdx].copy().astype(np.uint8), str(save_img_path))
+
+        return 0
+
+    def nondist_testing_batch_thread(self, dataloader, rgb2bgr, save_dir, save_lq=True, saver=None):
+
+        num_bs = len(dataloader)
+        for idx, val_data in enumerate(dataloader):
+
+            self.feed_data(val_data)
+            self.nonpad_test()
+
+            out_imgs = torch.clip(self.output * 255.0, min=0, max=255.0).permute(0, 2, 3, 1).cpu().numpy()
+            # out_imgs = tensor2img(visuals['result'], rgb2bgr=rgb2bgr)
+            img_paths = val_data['lq_path']
+            is_end = (idx + 1 == num_bs)
+            saver(out_imgs, img_paths, save_dir, idx, is_end=is_end)
+
+            # bs = len(out_imgs)
+            #
+            #
+            # for jdx in range(bs):
+            #
+            #     img_name = osp.splitext(osp.basename(img_paths[jdx]))[0]
+            #     save_img_path = osp.join(save_dir, f'{img_name}.png')
+            #
+            #     print(f'idx={idx}-{jdx}, saving output to {save_img_path}')
+            #
+            #     imwrite(out_imgs[jdx].copy().astype(np.uint8), str(save_img_path))
+
+        return 0
+
 
     def dist_validation(self, dataloader, current_iter, tb_logger, save_img, rgb2bgr, use_image):
         if os.environ['LOCAL_RANK'] == '0':
