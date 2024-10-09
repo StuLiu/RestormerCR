@@ -16,7 +16,7 @@ from basicsr.utils import (MessageLogger, check_resume, get_env_info,
                            init_wandb_logger, make_exp_dirs, mkdir_and_rename,
                            set_random_seed)
 from basicsr.utils.dist_util import get_dist_info, init_dist
-from basicsr.utils.options import dict2str, parse
+from basicsr.utils.options import dict2str, parse, parse_docker
 
 import numpy as np
 
@@ -31,7 +31,7 @@ def parse_options(is_train=True):
         help='job launcher')
     parser.add_argument('--local_rank', type=int, default=0)
     args = parser.parse_args()
-    opt = parse(args.opt, is_train=is_train)
+    opt = parse_docker(args.opt, is_train=is_train)
 
     # distributed settings
     if args.launcher == 'none':
@@ -163,7 +163,7 @@ def main():
     if resume_state is None:
         make_exp_dirs(opt)
         if opt['logger'].get('use_tb_logger') and 'debug' not in opt['name'] and opt['rank'] == 0:
-            mkdir_and_rename(osp.join('work/tb_logger', opt['name']))
+            mkdir_and_rename(osp.join('/work/tb_logger', opt['name']))
 
     # initialize loggers
     logger, tb_logger = init_loggers(opt)
