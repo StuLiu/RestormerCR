@@ -1,5 +1,5 @@
 # general settings
-name: 1003_cr_restormer-s_128x128_1xb16_640k_alld_hybirdv1_docker
+name: 1008_cr_restormer-s_128x128_1xb16_640k_alld_hybirdv1_docker
 model_type: ImageCleanModel
 scale: 1
 num_gpu: 1  # set num_gpu: 0 for cpu mode
