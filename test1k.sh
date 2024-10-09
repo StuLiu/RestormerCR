@@ -1,7 +1,7 @@
 
 export CUDA_VISIBLE_DEVICES=0
 
-name="1008_cr_restormer-s_128x128_1xb16_640k_alld_hybirdv1_docker"
+name="1008_cr_restormer-s_128x128_1xb16_1k_alld_hybirdv1_docker"
 
 # testing
 python CloudRemoval/test_docker.py -opt CloudRemoval/Options/${name}.yml \
