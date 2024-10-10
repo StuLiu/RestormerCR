@@ -193,7 +193,8 @@ def main():
 
     if opt['pretrained'] is not None:
         state_dict_pretrained = torch.load(opt['pretrained'], map_location='cpu')
-        model.load_state_dict(state_dict_pretrained)
+        model.net_g.load_state_dict(state_dict_pretrained)
+        print(f"loaded from {opt['pretrained']}")
 
     # create message logger (formatted outputs)
     msg_logger = MessageLogger(opt, current_iter, tb_logger)
