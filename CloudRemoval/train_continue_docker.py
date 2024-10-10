@@ -192,7 +192,7 @@ def main():
         current_iter = 0
 
     if opt['pretrained'] is not None:
-        state_dict_pretrained = torch.load(opt['pretrained'], map_location='cpu')
+        state_dict_pretrained = torch.load(opt['pretrained'], map_location='cpu')['params']
         model.net_g.load_state_dict(state_dict_pretrained)
         print(f"loaded from {opt['pretrained']}")
 
