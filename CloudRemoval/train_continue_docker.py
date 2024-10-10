@@ -36,6 +36,8 @@ def parse_options(is_train=True):
     args = parser.parse_args()
     opt = parse_docker(args.opt, is_train=is_train)
 
+    opt['pretrained'] = args.pretrained
+
     # distributed settings
     if args.launcher == 'none':
         opt['dist'] = False
@@ -189,8 +191,8 @@ def main():
         start_epoch = 0
         current_iter = 0
 
-    if opt.pretrained is not None:
-        state_dict_pretrained = torch.load(opt.pretrained, map_location='cpu')
+    if opt['pretrained'] is not None:
+        state_dict_pretrained = torch.load(opt['pretrained'], map_location='cpu')
         model.load_state_dict(state_dict_pretrained)
 
     # create message logger (formatted outputs)
