@@ -9,7 +9,7 @@ python CloudRemoval/test_batch_thread_docker.py -opt CloudRemoval/Options/${name
 
 cd /work/submits/${name}
 
-zip -r /output/results.zip results
+zip -rq /output/results.zip results
 
 #cd ../..
 #rm -rf submits
