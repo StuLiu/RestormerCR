@@ -83,10 +83,11 @@ def main():
     # make_exp_dirs(opt)
     # log_file = osp.join(opt['path']['log'],
     #                     f"test_{opt['name']}_{get_time_str()}.log")
-    logger = get_root_logger(
-        logger_name='basicsr', log_level=logging.INFO, log_file=None)
-    logger.info(get_env_info())
-    logger.info(dict2str(opt))
+    ##################
+    # logger = get_root_logger(
+    #     logger_name='basicsr', log_level=logging.INFO, log_file=None)
+    # logger.info(get_env_info())
+    # logger.info(dict2str(opt))
 
     # create test dataset and dataloader
     test_loader = None
@@ -101,8 +102,8 @@ def main():
             #     dist=opt['dist'],
             #     sampler=None,
             #     seed=opt['manual_seed'])
-            logger.info(
-                f"Number of test images in {dataset_opt['name']}: {len(test_set)}")
+            # logger.info(
+            #     f"Number of test images in {dataset_opt['name']}: {len(test_set)}")
 
     # create model
     model = create_model(opt)
@@ -113,7 +114,7 @@ def main():
     model.net_g.load_state_dict(state_dict_new)
 
     test_set_name = test_loader.dataset.opt['name']
-    logger.info(f'Testing {test_set_name}...')
+    # logger.info(f'Testing {test_set_name}...')
     rgb2bgr = opt['test'].get('rgb2bgr', False)
     # wheather use uint8 image to compute metrics
     save_dir = os.path.basename(args.opt).split('.')[0]
