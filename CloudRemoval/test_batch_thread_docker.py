@@ -51,14 +51,14 @@ def parse_options(is_train=False):
     # distributed settings
     if args.launcher == 'none':
         opt['dist'] = False
-        print('Disable distributed.', flush=True)
+        # print('Disable distributed.', flush=True)
     else:
         opt['dist'] = True
         if args.launcher == 'slurm' and 'dist_params' in opt:
             init_dist(args.launcher, **opt['dist_params'])
         else:
             init_dist(args.launcher)
-            print('init dist .. ', args.launcher)
+            # print('init dist .. ', args.launcher)
 
     opt['rank'], opt['world_size'] = get_dist_info()
 
@@ -130,13 +130,13 @@ def main():
             for jdx in range(bs):
                 img_name = osp.splitext(osp.basename(img_paths[jdx]))[0]
                 save_img_path = osp.join(save_dir, f'{img_name}.png')
-                print(f'idx={idx}-{jdx}, saving output to {save_img_path}')
+                # print(f'idx={idx}-{jdx}, saving output to {save_img_path}')
                 imwrite(out_imgs[jdx].copy().astype(np.uint8), str(save_img_path))
 
         def __call__(self, out_imgs, img_paths, save_dir, idx, is_end=False):
             # self.saveing(out_imgs, img_paths, save_dir, idx)
             self.tasks.append(self.thread_pool.submit(self.saveing, out_imgs, img_paths, save_dir, idx))
-            print(f'len(self.tasks)={len(self.tasks)}')
+            # print(f'len(self.tasks)={len(self.tasks)}')
             if is_end and len(self.tasks) > 0:
                 wait(self.tasks)
 
