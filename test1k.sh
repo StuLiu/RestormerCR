@@ -4,7 +4,7 @@ export CUDA_VISIBLE_DEVICES=0
 name="1008_cr_restormer-s_128x128_1xb16_1k_alld_hybirdv1_docker"
 
 # testing
-python CloudRemoval/test_docker.py -opt CloudRemoval/Options/${name}.yml \
+python CloudRemoval/test_batch_thread_docker.py -opt CloudRemoval/Options/${name}.yml \
   -ckpt /work/experiments/${name}/models/net_g_latest.pth
 
 cd /work/submits/${name}
