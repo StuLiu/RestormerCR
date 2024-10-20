@@ -13,3 +13,8 @@ curl -X POST -H "Content-Type: application/json" \
 curl -X POST -H "Content-Type: application/json" \
   -d '{"teamid":"'$TEAMID'"}' \
   http://119.3.123.24:6002/logs
+
+# submit
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"teamid":"'$TEAMID'"}' \
+  http://119.3.123.24:6001/juesai
