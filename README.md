@@ -1,4 +1,6 @@
 
+# Code for 1st place in rsipac 2024 Track 1 - Optical SAR Fusion for Cloud Removal.
+----------------------------------------------------------------------------------------
 # Restormer: Efficient Transformer for High-Resolution Image Restoration (CVPR 2022 -- Oral)
 
 [Syed Waqas Zamir](https://scholar.google.ae/citations?hl=en&user=POoai-QAAAAJ), [Aditya Arora](https://adityac8.github.io/), [Salman Khan](https://salman-h-khan.github.io/), [Munawar Hayat](https://scholar.google.com/citations?user=Mx8MbWYAAAAJ&hl=en), [Fahad Shahbaz Khan](https://scholar.google.es/citations?user=zvaeYnUAAAAJ&hl=en), and [Ming-Hsuan Yang](https://scholar.google.com/citations?user=p9-ohHsAAAAJ&hl=en)
